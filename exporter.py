@@ -1,7 +1,6 @@
 
 
 import json
-import re
 import urllib.request
 
 
@@ -21,6 +20,7 @@ def make_note(deck_name, flashcard, allow_duplicates):
         }
     
     else:
+
         note = {
             "deckName": deck_name,
             "modelName": flashcard.card_kind,
@@ -31,6 +31,8 @@ def make_note(deck_name, flashcard, allow_duplicates):
     if allow_duplicates:
         return {**note, "options": {"allowDuplicate": True}}
     else:
+        print("Made note")
+        print(note)
         return note
 
 
@@ -43,8 +45,6 @@ def make_updated_note(id, flashcard):
             "fields": {"Front": flashcard.front, "Back": flashcard.back},
         }
 
-        return note
-    
     else:
 
         note = {

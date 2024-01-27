@@ -14,15 +14,23 @@ class Flashcard:
 
     @property
     def card_kind(self) -> str:
-        if '<o>' in self.front:
+        if '<g>' in self.front:
             return 'KaTex and Markdown Cloze'
         else:
             return 'KaTex and Markdown Basic'
 
     @property
     def cloze_front(self) -> str:
-        return re.sub(r'<o>(.*)<\/o>', r'{{c1::\1}}', self.front)
-    
+        pattern = re.compile(r'<g>(.*?)</g>')
+
+        occurrence_count = 0
+        def replace(match):
+            nonlocal occurrence_count
+            occurrence_count += 1
+            return f'{{{{c{occurrence_count}::{match.group(1)}}}}}'
+
+        return pattern.sub(replace, self.front)
+        
     def __repr__(self) -> str:
         return f"{self.front} {self.back} {self.id}"
 
@@ -32,9 +40,23 @@ def count_spaces(input_string):
 
 
 def clean_string(input_string):
-    cleaned_str = re.sub(r'^\s*- \[ \] ', '', input_string)
+    # Remove spaces, dashes and tickboxes
+    cleaned_str = re.sub(r'^\s*- \[ \]', '', input_string)
     cleaned_str = re.sub(r'^\s*- ', '- ', cleaned_str)
     return cleaned_str
+
+def store_id(input_string, id):
+
+    pattern = r'(.*)<!---->(.*)'
+    match = re.search(pattern, input_string)
+    output_string = input_string
+
+    if match:
+        before_comment = match.group(1)
+        after_comment = match.group(2)
+        output_string = f'{before_comment}<!-- {id} -->{after_comment}'
+    
+    return output_string
 
 
 def markdown_to_anki(md_content, deck_name) -> list:
@@ -68,14 +90,17 @@ def markdown_to_anki(md_content, deck_name) -> list:
                 if result != 'duplicate' and result != None:
                     # Update front, since this is the final version of the card
                     current_card.id = result
+                    print(f"Added card with id: {result}")
                     cards.append(current_card)
 
             # Reset card and indentation
             current_card = Flashcard('', 0)
         
         # If detecting the start of a new card
-        if re.match(r'^\s*- \[ \] ', line):
+        if re.search(r'<!--', line):
             current_card = Flashcard(clean_string(line), count_spaces(line))
+            print("Detected...")
+            print(current_card.card_kind)
 
     return cards
 
@@ -91,7 +116,7 @@ def main():
    
     # Once a new card is added, update the markdown file
     for added_card in added_cards:
-        md_content = md_content.replace(added_card.front, f"{added_card.front} <!-- {added_card.id} -->")
+        md_content = md_content.replace(added_card.front, store_id(added_card.front, added_card.id))
 
     with open(file_name, 'w') as file:
         file.write(md_content)
