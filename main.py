@@ -7,10 +7,11 @@ from exporter import add_card, update_card
 class Flashcard:
 
     def __init__(self, front, indentation) -> None:
-        self.front = front
+        self.front = re.sub('-', '', front)
         self.indentation = indentation
         self.back = ''
         self.id = ''
+        self.tag = ''
 
     @property
     def card_kind(self) -> str:
@@ -32,7 +33,7 @@ class Flashcard:
         return pattern.sub(replace, self.front)
         
     def __repr__(self) -> str:
-        return f"{self.front} {self.back} {self.id}"
+        return f'{self.front} {self.back} {self.id} {self.tag}'
 
 
 def count_spaces(input_string):
@@ -64,9 +65,13 @@ def markdown_to_anki(md_content, deck_name) -> list:
     lines = md_content.split('\n')
     cards = []
     current_card = Flashcard('', 0)
+    current_tag = ''
     
     for line in lines:
 
+        if line[0:3] == '###':
+            current_tag = line[5:]
+        
         # Clean string and get indentation level
         line = rf"{line}"
         current_indentation = count_spaces(line)
@@ -77,7 +82,6 @@ def markdown_to_anki(md_content, deck_name) -> list:
 
         # When the indentation decreases, stop adding content to the back and try adding card
         elif current_card.front != '':
-
             # If this card has already been added, extract ID and update
             match = re.search(r'<!-- (\d+) -->', current_card.front)
             if match:
@@ -85,12 +89,11 @@ def markdown_to_anki(md_content, deck_name) -> list:
                 update_card(id, current_card)
             # Otherwise, create a new one and store front with ID
             else:
-                # current_card.set_card_type()
+                # Replace spaces with -, so it works in Anki
+                current_card.tag = re.sub(' ', '-', current_tag)
                 result = add_card(deck_name, current_card)
                 if result != 'duplicate' and result != None:
-                    # Update front, since this is the final version of the card
                     current_card.id = result
-                    print(f"Added card with id: {result}")
                     cards.append(current_card)
 
             # Reset card and indentation
@@ -100,7 +103,6 @@ def markdown_to_anki(md_content, deck_name) -> list:
         if re.search(r'<!--', line):
             current_card = Flashcard(clean_string(line), count_spaces(line))
             print("Detected...")
-            print(current_card.card_kind)
 
     return cards
 
@@ -115,8 +117,8 @@ def main():
         added_cards = markdown_to_anki(md_content, deck_name)
    
     # Once a new card is added, update the markdown file
-    for added_card in added_cards:
-        md_content = md_content.replace(added_card.front, store_id(added_card.front, added_card.id))
+    # for added_card in added_cards:
+    #    md_content = md_content.replace(added_card.front, store_id(added_card.front, added_card.id))
 
     with open(file_name, 'w') as file:
         file.write(md_content)

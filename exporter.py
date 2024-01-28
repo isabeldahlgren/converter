@@ -16,7 +16,7 @@ def make_note(deck_name, flashcard, allow_duplicates):
             "deckName": deck_name,
             "modelName": flashcard.card_kind,
             "fields": {"Front": flashcard.front, "Back": flashcard.back},
-            "tags": [""],
+            "tags": [flashcard.tag],
         }
     
     else:
@@ -25,33 +25,27 @@ def make_note(deck_name, flashcard, allow_duplicates):
             "deckName": deck_name,
             "modelName": flashcard.card_kind,
             "fields": {"Text": flashcard.cloze_front, "Back Extra": flashcard.back},
-            "tags": [""],
+            "tags": [flashcard.tag],
         }
 
     if allow_duplicates:
         return {**note, "options": {"allowDuplicate": True}}
     else:
-        print("Made note")
-        print(note)
         return note
 
 
 def make_updated_note(id, flashcard):
 
     if flashcard.card_kind == 'KaTex and Markdown Basic':
-
         note = {
             "id": id,
             "fields": {"Front": flashcard.front, "Back": flashcard.back},
         }
-
     else:
-
         note = {
             "id": id,
             "fields": {"Text": flashcard.cloze_front, "Back Extra": flashcard.back},
         }
-
     return note
 
 
