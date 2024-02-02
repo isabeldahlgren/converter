@@ -40,12 +40,15 @@ def make_updated_note(id, flashcard):
         note = {
             "id": id,
             "fields": {"Front": flashcard.front, "Back": flashcard.back},
+            "tags": [flashcard.tag],
         }
     else:
         note = {
             "id": id,
             "fields": {"Text": flashcard.cloze_front, "Back Extra": flashcard.back},
+            "tags": [flashcard.tag],
         }
+        
     return note
 
 
