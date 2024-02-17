@@ -15,7 +15,7 @@ def make_note(deck_name, flashcard, allow_duplicates):
         note = {
             "deckName": deck_name,
             "modelName": flashcard.card_kind,
-            "fields": {"Front": flashcard.front, "Back": flashcard.back},
+            "fields": {"Front": flashcard.front, "Back": flashcard.clean_back},
             "tags": [flashcard.tag],
         }
     
@@ -24,7 +24,7 @@ def make_note(deck_name, flashcard, allow_duplicates):
         note = {
             "deckName": deck_name,
             "modelName": flashcard.card_kind,
-            "fields": {"Text": flashcard.cloze_front, "Back Extra": flashcard.back},
+            "fields": {"Text": flashcard.cloze_front, "Back Extra": ''},
             "tags": [flashcard.tag],
         }
 
@@ -39,13 +39,13 @@ def make_updated_note(id, flashcard):
     if flashcard.card_kind == 'KaTex and Markdown Basic':
         note = {
             "id": id,
-            "fields": {"Front": flashcard.front, "Back": flashcard.back},
+            "fields": {"Front": flashcard.front, "Back": flashcard.clean_back},
             "tags": [flashcard.tag],
         }
     else:
         note = {
             "id": id,
-            "fields": {"Text": flashcard.cloze_front, "Back Extra": flashcard.back},
+            "fields": {"Text": flashcard.cloze_front, "Back Extra": ''},
             "tags": [flashcard.tag],
         }
         

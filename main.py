@@ -5,6 +5,7 @@ from exporter import add_card, update_card
 
 
 class Flashcard:
+    # TODO Add subclasses
 
     def __init__(self, front, indentation) -> None:
         # TODO Think about why this works
@@ -31,7 +32,17 @@ class Flashcard:
             occurrence_count += 1
             return f'{{{{c{occurrence_count}::{match.group(1)}}}}}'
 
-        return pattern.sub(replace, self.front)
+        cloze_front = pattern.sub(replace, self.front)
+        # Very hacky solution, should do this properly sometime
+        cloze_indented = pattern.sub(replace, self.back)
+        return f'{cloze_front}\n{cloze_indented}'
+    
+    @property
+    def clean_back(self) -> str:
+        if self.back.count('- ') <= 1:
+            return self.back[2:]
+        else:
+            return self.back
         
     def __repr__(self) -> str:
         return f'{self.front} {self.back} {self.id} {self.tag}'
@@ -79,6 +90,7 @@ def markdown_to_anki(md_content, deck_name) -> list:
     cards = []
     current_card = Flashcard('', 0)
     topic = ''
+    lecture = ''
     
     for line in lines:
 
@@ -104,8 +116,9 @@ def markdown_to_anki(md_content, deck_name) -> list:
                 id = int(match.group(1))
                 current_card.tag = create_tag(lecture, topic)
                 update_card(id, current_card)
-            # Otherwise, create a new one and store front with ID
-            else:
+            # Otherwise, provided it's not a TOC, create a new one and store front with ID
+            # I use a plugin generating TOCs which adds <-- mtoc --> below the TOC; don't add this
+            elif 'mtoc' not in current_card.front:
                 current_card.tag = create_tag(lecture, topic)
                 result = add_card(deck_name, current_card)
                 if result != 'duplicate' and result != None:
