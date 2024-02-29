@@ -17,14 +17,14 @@ class Flashcard:
 
     @property
     def card_kind(self) -> str:
-        if '<g>' in self.front:
+        if '<c>' in self.front:
             return 'KaTex and Markdown Cloze'
         else:
             return 'KaTex and Markdown Basic'
 
     @property
     def cloze_front(self) -> str:
-        pattern = re.compile(r'<g>(.*?)</g>')
+        pattern = re.compile(r'<c>(.*?)</c>')
 
         occurrence_count = 0
         def replace(match):

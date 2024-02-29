@@ -78,3 +78,5 @@ def update_card(id, flashcard):
     return result
 
 
+def delete_card(id):
+    result = invoke('updateNote', note={id})
