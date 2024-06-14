@@ -1,19 +1,13 @@
 
-### Lecture 1
+### Chapter 1
 
-#### Topic
-- Normal bullet point
-- Front $\int f \ d\mu = 2$ <!---->
-    - Back back.
-- Another bullet point
-    - Let's try the <g>cloze</g>. More clozes: <g>sdsdsd</g>. Then TFAE: <!---->
-      - <g>Property 1</g>
-      - <g>Another characterization!</g>
-- Front 2
-
-#### Another topic
-- OK. <!---->
-    - Some more info.
-    - Two bullet points, eh?
-- Hello.
-
+#### 1.1. Categories
+- **Q.** What goes into a category? <!----->
+    - Objects, morphisms, compositions, identities.
+    - cf. Def. 1.1.1.
+- **Q.** What axioms do we need for the definition of a category? <!----->
+    - Composition is associative. The identity is as we expect.
+- **Ex.** Our favourite categories <!----->
+    - $\mathsf{Grp}$.
+    - $\mathsf{Set}$.
+- Another bullet.
