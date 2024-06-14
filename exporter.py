@@ -10,24 +10,13 @@ def request(action, **params):
 
 def make_note(deck_name, flashcard, allow_duplicates):
 
-    if flashcard.card_kind == 'KaTex and Markdown Basic':
-
-        note = {
-            "deckName": deck_name,
-            "modelName": flashcard.card_kind,
-            "fields": {"Front": flashcard.front, "Back": flashcard.clean_back},
-            "tags": [flashcard.tag],
-        }
+    note = {
+        "deckName": deck_name,
+        "modelName": "Custom",
+        "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
+        "tags": [flashcard.tag],
+    }
     
-    else:
-
-        note = {
-            "deckName": deck_name,
-            "modelName": flashcard.card_kind,
-            "fields": {"Text": flashcard.cloze_front, "Back Extra": ''},
-            "tags": [flashcard.tag],
-        }
-
     if allow_duplicates:
         return {**note, "options": {"allowDuplicate": True}}
     else:
@@ -36,19 +25,12 @@ def make_note(deck_name, flashcard, allow_duplicates):
 
 def make_updated_note(id, flashcard):
 
-    if flashcard.card_kind == 'KaTex and Markdown Basic':
-        note = {
-            "id": id,
-            "fields": {"Front": flashcard.front, "Back": flashcard.clean_back},
-            "tags": [flashcard.tag],
-        }
-    else:
-        note = {
-            "id": id,
-            "fields": {"Text": flashcard.cloze_front, "Back Extra": ''},
-            "tags": [flashcard.tag],
-        }
-        
+    note = {
+        "id": id,
+        "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
+        "tags": [flashcard.tag],
+    }
+
     return note
 
 
@@ -80,3 +62,4 @@ def update_card(id, flashcard):
 
 def delete_card(id):
     result = invoke('updateNote', note={id})
+
