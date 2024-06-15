@@ -32,8 +32,7 @@ class Flashcard:
     def back(self):
         pattern = r'- cf\..*'
         cleaned_back = re.sub(pattern, '', self._back)
-        cleaned_back = cleaned_back.replace('- ', '')
-        return cleaned_back
+        return cleaned_back.replace('- ', '')
     
     @back.setter
     def back(self, string):
@@ -58,51 +57,60 @@ class Flashcard:
         else:
             self._reference = '-'
         return self._reference
-        
-    def __repr__(self) -> str:
+    
+    def __str__(self) -> str:
         return f'Front: {self.front}, Back: {self.back}, Reference: {self.reference}, Tag: {self.tag}'
 
 
 def count_spaces(input_string):
     return len(input_string) - len(input_string.lstrip(' '))
 
+
 def markdown_to_cards(md_content, deck_name) -> list:
 
     lines = md_content.split('\n')
     cards = []
+    topic, lecture, previous_indentation = '', '', 0
     current_card = Flashcard()
-    topic, lecture = '', ''
+    adding_content = True
     
     for line in lines:
-
-        # Extract lecture and topic
-        if line[0:4] == '### ':
-            lecture = line[4:]
-        if line[0:5] == '#### ':
-            topic = line[5:]
+        
+        if len(line) == 0:
+            continue
         
         current_indentation = count_spaces(line)
-
-        if current_indentation > current_card.indentation:
-            current_card.back += line.lstrip() + '\n'
-        else:
-
+        if line[0:4] == '### ':
+            lecture = line[4:]
+            continue
+        elif line[0:5] == '#### ':
+            topic = line[5:]
+            continue
+        elif not adding_content and '<!--' not in line:
+            continue
+        
+        if current_indentation > previous_indentation:
+            current_card._back += line.lstrip()
+        elif current_card.back != '':
+            adding_content = False  # Finalise card
             current_card.tag = (lecture, topic)
-            
-            # If this card has already been added, extract ID and update
-            match = re.search(r'<!-- (\d+) -->', current_card.front)
+
+            match = re.search(r'<!-- (\d+) -->', current_card.front)  # Check if card has been stored
             if match:
                 id = int(match.group(1))
                 update_card(id, current_card)
-            else:
+            elif current_card not in cards:
                 result = add_card(deck_name, current_card)
-                if result not in ['None', 'duplicate'] and current_card.front != '':
+                if result not in ['None', 'duplicate']:
                     current_card.id = result
-                    cards.append(current_card)
-        
-        if re.search(r'<!--', line):
+                cards.append(current_card)
+
+        previous_indentation = current_indentation
+
+        if '<!--' in line:
             current_card = Flashcard()
             current_card.front = line
+            adding_content = True
 
     return cards
 
