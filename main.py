@@ -32,7 +32,11 @@ class Flashcard:
     def back(self):
         pattern = r'- cf\..*'
         cleaned_back = re.sub(pattern, '', self._back)
-        return cleaned_back.replace('- ', '')
+        if '.- ' in cleaned_back:
+            cleaned_back = cleaned_back.replace('.- ', '.\n- ')
+        else:
+            cleaned_back = cleaned_back.replace('-','')
+        return cleaned_back
     
     @back.setter
     def back(self, string):
@@ -59,7 +63,7 @@ class Flashcard:
         return self._reference
     
     def __str__(self) -> str:
-        return f'Front: {self.front}, Back: {self.back}, Reference: {self.reference}, Tag: {self.tag}'
+        return f'Front: {self.front}, Back: {repr(self.back)}, Reference: {self.reference}, Tag: {self.tag}'
 
 
 def count_spaces(input_string):
@@ -70,7 +74,7 @@ def markdown_to_cards(md_content, deck_name) -> list:
 
     lines = md_content.split('\n')
     cards = []
-    topic, lecture, previous_indentation = '', '', 0
+    topic, lecture = '', ''
     current_card = Flashcard()
     adding_content = True
     
@@ -88,13 +92,12 @@ def markdown_to_cards(md_content, deck_name) -> list:
             continue
         elif not adding_content and '<!--' not in line:
             continue
-        
-        if current_indentation > previous_indentation:
+
+        if current_indentation > current_card.indentation:
             current_card._back += line.lstrip()
-        elif current_card.back != '':
+        elif current_card.back != '' and current_card.front != '':
             adding_content = False  # Finalise card
             current_card.tag = (lecture, topic)
-
             match = re.search(r'<!-- (\d+) -->', current_card.front)  # Check if card has been stored
             if match:
                 id = int(match.group(1))
@@ -103,13 +106,12 @@ def markdown_to_cards(md_content, deck_name) -> list:
                 result = add_card(deck_name, current_card)
                 if result not in ['None', 'duplicate']:
                     current_card.id = result
-                cards.append(current_card)
-
-        previous_indentation = current_indentation
+                    cards.append(current_card)
 
         if '<!--' in line:
             current_card = Flashcard()
             current_card.front = line
+            current_card.indentation = current_indentation
             adding_content = True
 
     return cards
