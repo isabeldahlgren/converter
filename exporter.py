@@ -1,5 +1,3 @@
-
-
 import json
 import urllib.request
 
@@ -10,13 +8,24 @@ def request(action, **params):
 
 def make_note(deck_name, flashcard, allow_duplicates):
 
-    note = {
-        "deckName": deck_name,
-        "modelName": "Custom",
-        "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
-        "tags": [flashcard.tag],
-    }
+    if flashcard.card_kind == 'Custom':
+
+        note = {
+            "deckName": deck_name,
+            "modelName": "Custom",
+            "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
+            "tags": [flashcard.tag],
+        }
     
+    else:
+
+        note = {
+            "deckName": deck_name,
+            "modelName": flashcard.card_kind,
+            "fields": {"Text": flashcard.cloze_front, "Back Extra": '', "Reference": flashcard.reference},
+            "tags": [flashcard.tag],
+        }
+
     if allow_duplicates:
         return {**note, "options": {"allowDuplicate": True}}
     else:
@@ -25,12 +34,22 @@ def make_note(deck_name, flashcard, allow_duplicates):
 
 def make_updated_note(id, flashcard):
 
-    note = {
-        "id": id,
-        "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
-        "tags": [flashcard.tag],
-    }
+    if flashcard.card_kind == 'Custom':
 
+        note = {
+            "id": id,
+            "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
+            "tags": [flashcard.tag],
+        }
+
+    else:
+
+        note = {
+            "id": id,
+            "fields": {"Text": flashcard.cloze_front, "Back Extra": '', "Reference": flashcard.reference},
+            "tags": [flashcard.tag],
+        }
+        
     return note
 
 
@@ -62,4 +81,3 @@ def update_card(id, flashcard):
 
 def delete_card(id):
     result = invoke('updateNote', note={id})
-
