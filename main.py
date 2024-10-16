@@ -1,5 +1,3 @@
-
-
 import sys
 import re
 from exporter import add_card, update_card
@@ -14,6 +12,25 @@ class Flashcard:
         self._reference = ''
         self._tag = ''
         self.id = ''
+
+    @property
+    def card_kind(self) -> str:
+        if '<c>' in self.front:
+            return 'KaTex and Markdown Cloze'
+        else:
+            return 'Custom'
+
+    @property
+    def cloze_front(self) -> str:
+        pattern = re.compile(r'<c>(.*?)</c>')
+        occurrence_count = 0
+        def replace(match):
+            nonlocal occurrence_count
+            occurrence_count += 1
+            return f'{{{{c{occurrence_count}::{match.group(1)}}}}}'
+        cloze_front = pattern.sub(replace, self.front)
+        cloze_indented = pattern.sub(replace, self.back)
+        return f'{cloze_front}\n{cloze_indented}'
     
     @property
     def front(self):
@@ -76,7 +93,7 @@ def markdown_to_cards(md_content, deck_name) -> list:
     cards = []
     topic, lecture = '', ''
     current_card = Flashcard()
-    adding_content = True
+    adding_content = False
     
     for line in lines:
         
@@ -84,27 +101,27 @@ def markdown_to_cards(md_content, deck_name) -> list:
             continue
         
         current_indentation = count_spaces(line)
-        if line[0:4] == '### ':
-            lecture = line[4:]
+        if line[0:3] == '## ':
+            lecture = line[3:]
             continue
-        elif line[0:5] == '#### ':
-            topic = line[5:]
+        elif line[0:4] == '### ':
+            topic = line[4:]
             continue
         elif not adding_content and '<!--' not in line:
             continue
 
         if current_indentation > current_card.indentation:
             current_card._back += line.lstrip()
-        elif current_card.back != '' and current_card.front != '':
+        elif current_card._front != '':
             adding_content = False  # Finalise card
             current_card.tag = (lecture, topic)
             match = re.search(r'<!-- (\d+) -->', current_card.front)  # Check if card has been stored
             if match:
                 id = int(match.group(1))
-                update_card(id, current_card)
+                result = update_card(id, current_card)
             elif current_card not in cards:
                 result = add_card(deck_name, current_card)
-                if result not in ['None', 'duplicate']:
+                if result != None and result != 'duplicate':
                     current_card.id = result
                     cards.append(current_card)
 
@@ -132,7 +149,7 @@ def main():
     with open(file_name, 'w') as file:
         file.write(md_content)
 
+    print("Done.")
+
 if __name__ == "__main__":
     main()
-
-
