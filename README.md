@@ -1,4 +1,6 @@
-# admin files
+# Docs
+
+:warning: The docs are outdated. Will be updated in due time.
 
 Usage: `python main.py my_deck sample.md` will convert the content of *sample.md* to flashcards and add it in the deck *my_deck*.
 
