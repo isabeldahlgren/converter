@@ -38,6 +38,7 @@ def make_updated_note(id, flashcard):
 
         note = {
             "id": id,
+            "modelName": 'Custom',
             "fields": {"Front": flashcard.front, "Back": flashcard.back, "Reference": flashcard.reference},
             "tags": [flashcard.tag],
         }
@@ -46,12 +47,12 @@ def make_updated_note(id, flashcard):
 
         note = {
             "id": id,
+            "modelName": flashcard.card_kind,
             "fields": {"Text": flashcard.cloze_front, "Back Extra": '', "Reference": flashcard.reference},
             "tags": [flashcard.tag],
         }
-        
-    return note
 
+    return note
 
 def invoke(action, **params):
     requestJson = json.dumps(request(action, **params)).encode('utf-8')
@@ -75,7 +76,7 @@ def add_card(deck_name, flashcard):
 
 
 def update_card(id, flashcard):
-    result = invoke('updateNote', note=make_updated_note(id, flashcard))
+    result = invoke('updateNoteModel', note=make_updated_note(id, flashcard))
     return result
 
 
