@@ -15,14 +15,14 @@ class Flashcard:
 
     @property
     def card_kind(self) -> str:
-        if '<c>' in self.front:
+        if '__' in self._back or '__' in self._front:
             return 'KaTex and Markdown Cloze'
         else:
             return 'Custom'
 
     @property
     def cloze_front(self) -> str:
-        pattern = re.compile(r'<c>(.*?)</c>')
+        pattern = re.compile(r'__(.*?)__')
         occurrence_count = 0
         def replace(match):
             nonlocal occurrence_count
@@ -47,12 +47,10 @@ class Flashcard:
     
     @property
     def back(self):
-        pattern = r'- cf\..*'
+        pattern = r'- cf\. .*?\n'
         cleaned_back = re.sub(pattern, '', self._back)
-        if '.- ' in cleaned_back:
-            cleaned_back = cleaned_back.replace('.- ', '.\n- ')
-        else:
-            cleaned_back = cleaned_back.replace('-','')
+        if cleaned_back.count('\n') <= 1:
+            cleaned_back = cleaned_back.replace('-', '')
         return cleaned_back
     
     @back.setter
@@ -80,7 +78,7 @@ class Flashcard:
         return self._reference
     
     def __str__(self) -> str:
-        return f'Front: {self.front}, Back: {repr(self.back)}, Reference: {self.reference}, Tag: {self.tag}'
+        return f'Front: {self.front}, Back: {self.back}, Reference: {self.reference}, Tag: {self.tag}'
 
 
 def count_spaces(input_string):
@@ -96,11 +94,12 @@ def markdown_to_cards(md_content, deck_name) -> list:
     adding_content = False
     
     for line in lines:
-        
+
         if len(line) == 0:
             continue
-        
+
         current_indentation = count_spaces(line)
+
         if line[0:3] == '## ':
             lecture = line[3:]
             continue
@@ -111,11 +110,11 @@ def markdown_to_cards(md_content, deck_name) -> list:
             continue
 
         if current_indentation > current_card.indentation:
-            current_card._back += line.lstrip()
+            current_card._back += line.lstrip() + '\n'
         elif current_card._front != '':
             adding_content = False  # Finalise card
             current_card.tag = (lecture, topic)
-            match = re.search(r'<!-- (\d+) -->', current_card.front)  # Check if card has been stored
+            match = re.search(r'<!-- (\d+) -->', current_card._front)  # Check if card has been stored
             if match:
                 id = int(match.group(1))
                 result = update_card(id, current_card)
@@ -130,7 +129,7 @@ def markdown_to_cards(md_content, deck_name) -> list:
             current_card.front = line
             current_card.indentation = current_indentation
             adding_content = True
-
+        
     return cards
 
 
