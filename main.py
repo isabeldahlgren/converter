@@ -1,3 +1,4 @@
+
 import sys
 import re
 from exporter import add_card, update_card
@@ -34,23 +35,23 @@ class Flashcard:
     
     @property
     def front(self):
-        return self._front.lstrip('- ')
+        pattern = r'<!--( (\d+) )?-->'
+        cleaned_front = re.sub(pattern, '', self._front)
+        if cleaned_front.count('\n') <= 1:
+            cleaned_front = cleaned_front.replace('- ', '')
+        cleaned_front = cleaned_front.replace('- *Proof.*', '\n*Proof.*')
+        return cleaned_front
     
     @front.setter
     def front(self, string):
-        pattern = r'-\s*(.*?)\s*<!---->'
-        match = re.search(pattern, string)
-        if match:
-            self._front = match.group(1)
-        else:
-            self._front = string
+        self._front = string
     
     @property
     def back(self):
         pattern = r'- cf\. .*?\n'
         cleaned_back = re.sub(pattern, '', self._back)
         if cleaned_back.count('\n') <= 1:
-            cleaned_back = cleaned_back.replace('-', '')
+            cleaned_back = cleaned_back.replace('- ', '')
         return cleaned_back
     
     @back.setter
@@ -92,6 +93,7 @@ def markdown_to_cards(md_content, deck_name) -> list:
     topic, lecture = '', ''
     current_card = Flashcard()
     adding_content = False
+    prev_line, prev_prev_line = '', ''
     
     for line in lines:
 
@@ -102,17 +104,23 @@ def markdown_to_cards(md_content, deck_name) -> list:
 
         if line[0:3] == '## ':
             lecture = line[3:]
+            prev_line, prev_prev_line = line, prev_line
             continue
         elif line[0:4] == '### ':
             topic = line[4:]
+            prev_line, prev_prev_line = line, prev_line
             continue
         elif not adding_content and '<!--' not in line:
+            prev_line, prev_prev_line = line, prev_line
             continue
 
         if current_indentation > current_card.indentation:
             current_card._back += line.lstrip() + '\n'
         elif current_card._front != '':
+
             adding_content = False  # Finalise card
+            if 'Proof.' in current_card.front:
+                current_card._front = prev_prev_line.strip('- ') + '\n' + prev_line.strip('- ') + '\n' + current_card._front
             current_card.tag = (lecture, topic)
             match = re.search(r'<!-- (\d+) -->', current_card._front)  # Check if card has been stored
             if match:
@@ -129,6 +137,7 @@ def markdown_to_cards(md_content, deck_name) -> list:
             current_card.front = line
             current_card.indentation = current_indentation
             adding_content = True
+
         
     return cards
 
